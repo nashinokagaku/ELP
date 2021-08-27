@@ -1,4 +1,4 @@
- #define DEBUG_PRESS   //気圧制御のデバッグ用
+// #define DEBUG_PRESS   //気圧制御のデバッグ用
 #define DEBUG_FLOW  //流量系統のデバッグ
 // #define DEBUG_FLOW_LORA //LoRa越しの流量デバッグ
 #define DEBUG_SENS  //センサ系のデバッグ用
@@ -64,11 +64,14 @@ const int sum_min = -5;
 
 void setup(){
   pinSetup();            //IOピンの設定
+  //delay(3000);
   change_freq1(2);       //PWMの周期変更31.37kHz
   wdt_enable(WDTO_4S);   //8秒周期のウォッチドッグタイマ開始
   analogWrite(IGPWM,0);
-  Serial.begin(9600);    //LoRaとの通信開始
+  Serial.begin(9600);    //デバッグ用UARTとの通信開始
+  Serial2.begin(115200);  //LoRa用UART
   Serial.println("MegaFire_pid");
+  Serial2.println("MegaFire");
 //  GNSSsetup();
   wdt_reset();
 //  Wire.begin();          //I2C通信開始

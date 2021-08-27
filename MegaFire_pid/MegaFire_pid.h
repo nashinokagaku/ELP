@@ -24,6 +24,7 @@
 #define Air_PWM 2
 #define O2_PWM 5
 #define Thermocouple_PIN A3
+#define LoRa_Reset 24
 
 #define O2PWMset OCR3A  //Timer3のDuty設定用レジスタ名
 #define AirPWMset OCR3B
@@ -90,6 +91,8 @@ void pinSetup(){
   pinMode(Air_flow,INPUT);
   pinMode(LPG_flow,INPUT);
   pinMode(Thermocouple_PIN,INPUT);
+  pinMode(LoRa_Reset,OUTPUT);
+  digitalWrite(LoRa_Reset,HIGH);
   //pinMode(GNSS_RST,OUTPUT);
   //digitalWrite(GNSS_RST,HIGH);
 }
