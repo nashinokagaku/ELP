@@ -1,5 +1,5 @@
- #define DEBUG_PRESS   //気圧制御のデバッグ用
-#define DEBUG_FLOW  //流量系統のデバッグ
+// #define DEBUG_PRESS   //気圧制御のデバッグ用
+//#define DEBUG_FLOW  //流量系統のデバッグ
 // #define DEBUG_FLOW_LORA //LoRa越しの流量デバッグ
 #define DEBUG_SENS  //センサ系のデバッグ用
 
@@ -71,8 +71,8 @@ void setup(){
   Serial.println("MegaFire_pid");
 //  GNSSsetup();
   wdt_reset();
-//  Wire.begin();          //I2C通信開始
-//  setupBME280();
+  Wire.begin();          //I2C通信開始
+  setupBME280();
   SDsetup();
   Servo_Diaphragm.attach(Servo_PWM);
   MsTimer2::set(Ts, TIME_Interrupt); // TsごとTIME_Interruptを呼び出す
@@ -80,10 +80,10 @@ void setup(){
 }
 
 void loop(){
-//  BME280_OUT_data();
-//  BME280_IN_data();
-//  Create_Buffer_BME280_OUT();
-//  Create_Buffer_BME280_IN();
+  BME280_OUT_data();
+  BME280_IN_data();
+  Create_Buffer_BME280_OUT();
+  Create_Buffer_BME280_IN();
 //  SDWriteData();
 IG_Get(IG_TIME+IG_TIME_DELAY); 
   /*if(time_flag!=0){
