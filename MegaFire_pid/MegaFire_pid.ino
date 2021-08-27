@@ -1,4 +1,4 @@
-// #define DEBUG_PRESS   //気圧制御のデバッグ用
+ #define DEBUG_PRESS   //気圧制御のデバッグ用
 //#define DEBUG_FLOW  //流量系統のデバッグ
 // #define DEBUG_FLOW_LORA //LoRa越しの流量デバッグ
 #define DEBUG_SENS  //センサ系のデバッグ用
@@ -8,7 +8,7 @@
 #define r_o 0.08  //L/min
 #define r_a 0.7  //L/min
 #define r_g 0.08  //L/min
-#define r_d 1013.25; //気圧目標値hPa
+#define r_d 1100 //気圧目標値hPa
 
 //O2のPIDゲイン
 const float Kp_o = 400;
@@ -16,9 +16,9 @@ const float Ki_o = 300;
 const float Kd_o = 10;
 
 //空気のPIDゲイン
-const float Kp_a = 350;
-const float Ki_a = 300;
-const float Kd_a = 0.001;
+const float Kp_a = 0;
+const float Ki_a = 3000;
+const float Kd_a = 0;
 
 //LPGのPIDゲイン
 const float Kp_g = 450;
@@ -31,18 +31,18 @@ const int OffSet_a = 1950;
 const int OffSet_g = 2000;
 
 //燃焼器内気圧のPID項
-#define Kp_d 0.05
-#define Ki_d 0.03
-#define Kd_d 0.01
-#define OffSet_d (30)
+const float Kp_d = -2.3;
+const float Ki_d = 0;
+const float Kd_d = -0.9;
+const float OffSet_d = (30);
 
 //流量系統の積分偏差の上限下限設定
 const int sum_max =  5;
 const int sum_min = -5;
 
 //ダイアフラム制御の積分偏差の上限下限
-#define sum_d_max 30
-#define sum_d_min -3000
+#define sum_d_max 200
+#define sum_d_min -200
 
 #define u_d_max 105
 #define u_d_min 37
@@ -55,7 +55,7 @@ const int sum_min = -5;
 //////////////通信系定数//////////////
 #define IG_TIME 30 //イグナイタ点火時間
 #define IG_TIME_DELAY 50 //イグナイタの点火遅れ時間(先に燃料噴射)
-#define Ts 50 //(ms)タイマ割り込みの周期, 制御周期
+#define Ts 20 //(ms)タイマ割り込みの周期, 制御周期
 #define SENDTIME 4  //送信間隔(s)
 #define FLOW_TIME 20
 /////////////////////////////////////
@@ -80,10 +80,10 @@ void setup(){
 }
 
 void loop(){
-  BME280_OUT_data();
-  BME280_IN_data();
-  Create_Buffer_BME280_OUT();
-  Create_Buffer_BME280_IN();
+  //BME280_OUT_data();
+  //BME280_IN_data();
+  //Create_Buffer_BME280_OUT();
+  //Create_Buffer_BME280_IN();
 //  SDWriteData();
 IG_Get(IG_TIME+IG_TIME_DELAY); 
   /*if(time_flag!=0){
@@ -120,21 +120,21 @@ void TIME_Interrupt(void){
   wdt_reset();
   timecount++;
   if(timecount>(int)(1000/Ts)) time_flag=1;
-  //  if(Diaphram_count>D_COUNT){
-  //    sei();
+    if(Diaphram_count>D_COUNT){
+      sei();
   //    BME280_OUT_data();
-  //    BME280_IN_data();
-  //    //Pressure_IN = BME280_IN.readFloatPressure() / 100; //hPa
+      BME280_IN_data();
+      //Pressure_IN = BME280_IN.readFloatPressure() / 100; //hPa
   //    cli();
-  //    Diaphragm_control();
-  //    Diaphram_count=0;
-  //  }
+      Diaphragm_control();
+      Diaphram_count=0;
+    }
    else Diaphram_count++;
   
   if(Flow_flag==1){
-    O2_Control();
+//    O2_Control();
     Air_Control();
-    LPG_Control();
+//    LPG_Control();
   }
   else {
     O2PWMset=0;
@@ -177,10 +177,18 @@ void Diaphragm_control(){
   static float etmp_d = 0 , sum_d = 0; //1ステップ前の誤差, 誤差の総和
   float u_d = 0;
   float y_d = Pressure_IN; //現在の圧力
-  float e_d = r_d - y_d; //誤差
+  float e_d = (r_d - y_d); //誤差
   /* 制御計算 */
-  // u_d = OffSet_d - (Kp_d * e_d + Ki_d * sum_d + Kd_d * (e_d - etmp_d) / (Ts * 1e-3)); //制御入力を計算
-  u_d = Kp_d * e_d + Ki_d * sum_d + Kd_d * (e_d - etmp_d) / (Ts * 1e-3); //制御入力を計算
+//  u_d = OffSet_d - (Kp_d * e_d + Ki_d * sum_d + Kd_d * (e_d - etmp_d) / (Ts * 1e-3)); //制御入力を計算
+//  u_d = Kp_d * e_d + Ki_d * sum_d + Kd_d * (e_d - etmp_d) / (Ts * 1e-3); //制御入力を計算
+  u_d = Kp_d * e_d ;
+  Serial.print(u_d);
+  u_d += Ki_d * sum_d ;
+  Serial.write(',');
+  Serial.print(u_d);
+  u_d += Kd_d * (e_d - etmp_d) / (Ts * 1e-3); //制御入力を計算
+  Serial.write(',');
+  Serial.print(u_d);
   etmp_d = e_d; //誤差を更新
   sum_d += (Ts * 1e-3) * e_d; //誤差の総和を更新
   /* 上下限設定 */
@@ -191,9 +199,12 @@ void Diaphragm_control(){
   /* 入力 */
   Servo_Diaphragm.write(u_d);
   #ifdef DEBUG_PRESS
+  Serial.write(',');
   Serial.print(y_d);
   Serial.write(',');
-  Serial.println(u_d);
+  Serial.print(u_d);
+  Serial.write(',');
+  Serial.println(e_d);
   #endif
 }
 
