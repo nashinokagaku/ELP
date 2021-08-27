@@ -1,6 +1,6 @@
-#define O2_flow A0 //A0から変更
+#define O2_flow A0
 #define Air_flow A1
-#define LPG_flow A2 //A2から変更
+#define LPG_flow A2
 #define LPG_PWM 3
 #define Air_PWM 2
 #define O2_PWM 5
@@ -16,27 +16,27 @@
 const int Ts = 50;     //ms
 
 //各制御の目標値
-const float r_o = 0.08;  //L/min
+const float r_o = 0.04;  //L/min
 const float r_a = 0.7;   //L/min
 const float r_g = 0.08;  //L/min
 
 //O2のPIDゲイン
-const float Kp_o = 400;
-const float Ki_o = 300;
-const float Kd_o = 10;
+const float Kp_o = 0;
+const float Ki_o = 3000;
+const float Kd_o = 0;
 
 //空気のPIDゲイン
-const float Kp_a = 350;
-const float Ki_a = 300;
-const float Kd_a = 0.001;
+const float Kp_a = 0;
+const float Ki_a = 3000;
+const float Kd_a = 0;
 
 //LPGのPIDゲイン
-const float Kp_g = 450;
-const float Ki_g = 600;
-const float Kd_g = 1;
+const float Kp_g = 0;
+const float Ki_g = 3000;
+const float Kd_g = 0;
 
 //PWMのオフセット
-const int OffSet_o = 2000;
+const int OffSet_o = 1950;
 const int OffSet_a = 1950;
 const int OffSet_g = 2000;
 
@@ -103,7 +103,7 @@ void O2_Control(){
   Serial.print(x);
   Serial.write(',');
   Serial.print(u);
-  Serial.write(',');
+//  Serial.write(',');
   #endif
 }
 
@@ -121,9 +121,9 @@ void Air_Control(){
   etmp_a = e;
   sum_a += (Ts * 1e-3) * e;
   /* 上下限設定 */
-  // if(sum_a > sum_max) sum_a = sum_max;
-  // else if(sum_a < sum_min) sum_a = sum_min;
-  if(u > 4095) u = 4095;
+  if(sum_a > sum_max) sum_a = sum_max;
+  else if(sum_a < sum_min) sum_a = sum_min;
+  if(u > 2700) u = 2700;
   else if(u < 0) u = 0;
   /* 入力 */
   AirPWMset = u; //Air PWM
@@ -132,7 +132,6 @@ void Air_Control(){
   Serial.print(x);
   Serial.write(',');
   Serial.print(u);
-  Serial.write(',');
   #endif
 }
 
@@ -160,6 +159,6 @@ void LPG_Control(){
   Serial.print("LPG=");
   Serial.print(x);
   Serial.write(',');
-  Serial.println(u);
+  Serial.print(u);
   #endif
 }
